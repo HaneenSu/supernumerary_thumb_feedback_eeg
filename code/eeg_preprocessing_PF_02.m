@@ -1,4 +1,4 @@
-% SPF_pre_longshort.m
+% eeg_preprocessing_PF_02.m
 %
 % EEG preprocessing pipeline for the Pressure Feedback (PF) group.
 % For each subject: loads raw .vhdr, applies bandpass (0.5–85 Hz) and
@@ -32,12 +32,6 @@ events = {
     'S  7', 'PF';
     'S  8', 'PF';
     'S  9', 'PF';
-    'R  4', 'NPF';
-    'R  5', 'NPF';
-    'R  6', 'NPF';
-    'R  7', 'NPF';
-    'R  8', 'NPF';
-    'R  9', 'NPF';
 };
 
 baseline_period = [-1000 -200];
@@ -151,8 +145,8 @@ for sub = 1:nSubject
     end
 
     % Epoching
-    for evt = 7:12
-        if evt == 7 
+    for evt = 1:6
+        if evt == 1 
             epoch_file = ['SF' int2str(sub) '_' events{evt, 2}];
             epoch = pop_epoch(subEEG, events(evt, 1), epoch_period, 'epochinfo', 'yes');
             epoch = pop_rmbase(epoch, baseline_period);
@@ -164,7 +158,7 @@ for sub = 1:nSubject
             epoch = pop_mergeset(epoch, epochx);
         end
 
-        if evt == 12
+        if evt == 6
             epoch = pop_saveset(epoch, 'filename', epoch_file, 'filepath', path_to_epoched, 'savemode', 'onefile');
         end
     end

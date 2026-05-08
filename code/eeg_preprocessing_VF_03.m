@@ -1,4 +1,4 @@
-% SVF_pre_longshort.m
+% eeg_preprocesseing_VF_03.m
 %
 % EEG preprocessing pipeline for the Vibrotactile Feedback (VF) group.
 % Identical pipeline to SPF_pre_longshort.m, with one addition: all event
@@ -32,12 +32,6 @@ events = {
     'S  7', 'VF';
     'S  8', 'VF';
     'S  9', 'VF';
-    'R  4', 'NVF';
-    'R  5', 'NVF';
-    'R  6', 'NVF';
-    'R  7', 'NVF';
-    'R  8', 'NVF';
-    'R  9', 'NVF';
 };
 
 baseline_period = [-1000 -200];
@@ -154,8 +148,8 @@ for sub = 1:nSubject
     end
 
     % Epoching
-    for evt = 7:12
-        if evt == 7 
+    for evt = 1:6
+        if evt == 1 
             epoch_file = ['SF' int2str(sub) '_' events{evt, 2}];
             epoch = pop_epoch(subEEG, events(evt, 1), epoch_period, 'epochinfo', 'yes');
             epoch = pop_rmbase(epoch, baseline_period);
@@ -167,7 +161,7 @@ for sub = 1:nSubject
             epoch = pop_mergeset(epoch, epochx);
         end
 
-        if evt == 12
+        if evt == 6
             epoch = pop_saveset(epoch, 'filename', epoch_file, 'filepath', path_to_epoched, 'savemode', 'onefile');
         end
     end

@@ -1,4 +1,4 @@
-% wpli_SF_longshort.m
+% connectivity_analysis_05.m
 %
 % Weighted Phase Lag Index (wPLI) connectivity analysis for the sensory feedback study.
 %

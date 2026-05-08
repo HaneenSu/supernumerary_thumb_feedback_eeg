@@ -1,4 +1,4 @@
-% SF_pre_bhv.m
+% behavioral_analysis_01.m
 %
 % Behavioral analysis for the sensory feedback study.
 % Computes explicit and implicit identification accuracy across for two groups:
@@ -27,19 +27,10 @@ if exist(stats_file, 'file'), delete(stats_file); end
 vf = collect_group_metrics(cfg.vf_path, 'SFV', 'VF', cfg);
 pf = collect_group_metrics(cfg.pf_path, 'SFP', 'PF', cfg);
 
-print_descriptive_summary(vf, pf);
-
 %% Figure 2: overall identification accuracy
 close all;
 plot_figure2(vf, pf, cfg.figs_path);
 diary(stats_file); run_figure2_statistics(vf, pf); diary off;
-
-%% Supplementary Figure 1: consistency matrices
-close all; plot_supp1(vf, pf, cfg);
-
-%% Supplementary Figure 2: implicit articulation length vs direction
-close all; plot_supp2(vf, pf, cfg.figs_path);
-diary(stats_file); run_supp2_statistics(vf, pf); diary off;
 
 function cfg = get_analysis_config()
 cfg = struct();
@@ -47,26 +38,15 @@ cfg.vf_path   = '../rawdata/SFV/';
 cfg.pf_path   = '../rawdata/SFP/';
 cfg.figs_path = '../figs';
 cfg.n_subject = 21;
-cfg.trials_per_session = 36;
-cfg.sessions_per_condition = 2;
-cfg.motion_codes = {'4', '5', '6', '7', '8', '9'};
-cfg.motion_labels = {'P1 to P3', 'P3 to P1', 'P1 to P2', 'P2 to P3', 'P3 to P2', 'P2 to P1'};
-cfg.reported_motion_codes = {'6', '9'};
 end
 
 function metrics = collect_group_metrics(path_to_rawdata, file_prefix, modality, cfg)
 n_subject = cfg.n_subject;
-n_motion_types = numel(cfg.motion_codes);
-n_transitions = (cfg.trials_per_session - 1) * cfg.sessions_per_condition;
 
 metrics = struct();
 metrics.modality = modality;
 metrics.explicit_accuracy = zeros(n_subject, 1);
 metrics.implicit_accuracy = zeros(n_subject, 1);
-metrics.explicit_continuity = false(n_subject, n_transitions);
-metrics.implicit_continuity = false(n_subject, n_transitions);
-metrics.implicit_length_accuracy = zeros(n_subject, 1);
-metrics.implicit_direction_accuracy = zeros(n_subject, 1);
 
 for sub = 1:n_subject
     subEEG = load_clean_subject_eeg(path_to_rawdata, file_prefix, sub, modality);
@@ -77,12 +57,7 @@ for sub = 1:n_subject
 
     metrics.explicit_accuracy(sub) = mean([explicit_trials.is_correct]);
     metrics.implicit_accuracy(sub) = mean([implicit_trials.is_correct]);
-    metrics.explicit_continuity(sub, :) = compute_continuity_mask(explicit_trials, cfg.trials_per_session);
-    metrics.implicit_continuity(sub, :) = compute_continuity_mask(implicit_trials, cfg.trials_per_session);
 
-    [length_acc, direction_acc] = compute_length_direction_accuracy(implicit_trials);
-    metrics.implicit_length_accuracy(sub) = length_acc;
-    metrics.implicit_direction_accuracy(sub) = direction_acc;
 end
 end
 
@@ -189,135 +164,10 @@ ci_hi = tanh(z_r + 1.96 * se);
 end
 
 
-function plot_supp1(vf, pf, cfg)
-[vf_implicit_s1, vf_implicit_s2] = split_continuity_sessions(vf.implicit_continuity, cfg.trials_per_session);
-[pf_implicit_s1, pf_implicit_s2] = split_continuity_sessions(pf.implicit_continuity, cfg.trials_per_session);
-[vf_explicit_s1, vf_explicit_s2] = split_continuity_sessions(vf.explicit_continuity, cfg.trials_per_session);
-[pf_explicit_s1, pf_explicit_s2] = split_continuity_sessions(pf.explicit_continuity, cfg.trials_per_session);
-
-figure('Name', 'Supp Figure 1 - Implicit', 'Color', 'w');
-
-subplot(2, 2, 1);
-plot_consistency_matrix(vf_implicit_s1, {'Vibrotactile'; 'Session 1'}, false, true);
-
-subplot(2, 2, 2);
-plot_consistency_matrix(vf_implicit_s2, {'Vibrotactile'; 'Session 2'}, false, false);
-
-subplot(2, 2, 3);
-plot_consistency_matrix(pf_implicit_s1, {'Pressure'; 'Session 1'}, true, true);
-
-subplot(2, 2, 4);
-plot_consistency_matrix(pf_implicit_s2, {'Pressure'; 'Session 2'}, true, false);
-
-set(gcf, 'Position', [100 100 800 600]);
-exportgraphics(gcf, fullfile(cfg.figs_path, 'supp1a_consistency_implicit.pdf'), 'ContentType', 'vector');
-
-figure('Name', 'Supp Figure 1 - Explicit', 'Color', 'w');
-
-subplot(2, 2, 1);
-plot_consistency_matrix(vf_explicit_s1, {'Vibrotactile'; 'Session 1'}, false, true);
-
-subplot(2, 2, 2);
-plot_consistency_matrix(vf_explicit_s2, {'Vibrotactile'; 'Session 2'}, false, false);
-
-subplot(2, 2, 3);
-plot_consistency_matrix(pf_explicit_s1, {'Pressure'; 'Session 1'}, true, true);
-
-subplot(2, 2, 4);
-plot_consistency_matrix(pf_explicit_s2, {'Pressure'; 'Session 2'}, true, false);
-
-set(gcf, 'Position', [100 100 800 600]);
-exportgraphics(gcf, fullfile(cfg.figs_path, 'supp1b_consistency_explicit.pdf'), 'ContentType', 'vector');
-end
-
-function plot_supp2(vf, pf, figs_path)
-length_accuracy = [vf.implicit_length_accuracy; pf.implicit_length_accuracy];
-direction_accuracy = [vf.implicit_direction_accuracy; pf.implicit_direction_accuracy];
-
-figure('Name', 'Supp Figure 2');
-styled_boxplot(100 * [length_accuracy, direction_accuracy], ...
-    {'Articulation length', 'Articulation direction'}, 'Accuracy [%]', [], false);
-set(gcf, 'Position', [100 100 550 420]);
-ylim([0 110]);
-exportgraphics(gcf, fullfile(figs_path, 'supp2_length_vs_direction.pdf'), 'ContentType', 'vector');
-end
-
-function run_supp2_statistics(vf, pf)
-length_accuracy    = [vf.implicit_length_accuracy;    pf.implicit_length_accuracy];
-direction_accuracy = [vf.implicit_direction_accuracy; pf.implicit_direction_accuracy];
-
-fprintf('\n========================================\n');
-fprintf('Supplementary Figure 2 Statistics\n');
-fprintf('========================================\n');
-
-fprintf('\n--- Supp2: Implicit length vs direction accuracy (within-subject, pooled groups) ---\n');
-report_wilcoxon_signed(length_accuracy, direction_accuracy, ...
-    'Implicit length', 'Implicit direction', 'two-tailed', 'none');
-end
-
-function print_descriptive_summary(vf, pf)
-all_implicit = [vf.implicit_accuracy; pf.implicit_accuracy];
-
-fprintf('Descriptive summary\n');
-fprintf('Vibrotactile explicit: %.2f +/- %.2f %%\n', mean(100 * vf.explicit_accuracy), std(100 * vf.explicit_accuracy));
-fprintf('Pressure explicit: %.2f +/- %.2f %%\n', mean(100 * pf.explicit_accuracy), std(100 * pf.explicit_accuracy));
-fprintf('Implicit pooled: %.2f +/- %.2f %%\n', mean(100 * all_implicit), std(100 * all_implicit));
-end
-
-function print_swtest_if_available(label, values)
-if exist('swtest', 'file') ~= 2
-    return;
-end
-
-[h_value, p_value] = swtest(values);
-fprintf('%s SW test: H=%d, p=%s\n', label, h_value, format_pvalue(p_value));
-end
-
 function formatted_p = format_pvalue(p_value)
 formatted_p = sprintf('%.8f', p_value);
 end
 
-
-function plot_consistency_matrix(matrix_data, plot_title, is_bottom, is_left)
-imagesc(double(matrix_data));
-colormap([0 0 0; 1 1 1]);
-caxis([0 1]);
-
-set(gca, 'YDir', 'reverse');
-set(gca, 'FontSize', 12, 'FontWeight', 'bold');
-set(gca, 'XTick', [], 'YTick', []);
-title(plot_title, 'FontSize', 13, 'FontWeight', 'bold');
-
-if nargin > 2 && is_bottom
-    xlabel('Consecutive trial pair', 'FontSize', 14, 'FontWeight', 'bold');
-end
-if nargin > 3 && is_left
-    ylabel('Participant', 'FontSize', 14, 'FontWeight', 'bold');
-end
-hold on;
-
-n_rows = size(matrix_data, 1);
-n_cols = size(matrix_data, 2);
-grid_color = [0.7 0.7 0.7];
-
-for x = 0.5:(n_cols + 0.5)
-    plot([x x], [0.5 n_rows + 0.5], 'Color', grid_color, 'LineWidth', 0.5);
-end
-
-for y = 0.5:(n_rows + 0.5)
-    plot([0.5 n_cols + 0.5], [y y], 'Color', grid_color, 'LineWidth', 0.5);
-end
-
-xlim([0.5 n_cols + 0.5]);
-ylim([0.5 n_rows + 0.5]);
-hold off;
-end
-
-function [session1, session2] = split_continuity_sessions(matrix_data, trials_per_session)
-session_transitions = trials_per_session - 1;
-session1 = matrix_data(:, 1:session_transitions);
-session2 = matrix_data(:, session_transitions + 1:2 * session_transitions);
-end
 
 function subEEG = load_clean_subject_eeg(path_to_rawdata, file_prefix, sub, modality)
 sub_str = sprintf('%04d', sub - 1);
@@ -422,61 +272,6 @@ for j = 1:size(subEEG.event, 2)
         'is_long', motion.isLong, ...
         'is_flex', motion.isFlex);
 end
-end
-
-function accuracy = compute_motion_accuracy(trials, motion_codes)
-accuracy = NaN(1, numel(motion_codes));
-trial_codes = {trials.code};
-
-for i = 1:numel(motion_codes)
-    idx = strcmp(trial_codes, motion_codes{i});
-    accuracy(i) = mean([trials(idx).is_correct]);
-end
-end
-
-function continuity = compute_continuity_mask(trials, trials_per_session)
-n_sessions = numel(trials) / trials_per_session;
-continuity = false(1, (trials_per_session - 1) * n_sessions);
-
-cursor = 1;
-for session_idx = 1:n_sessions
-    session_start = (session_idx - 1) * trials_per_session + 1;
-    session_end = session_idx * trials_per_session;
-    session_trials = trials(session_start:session_end);
-
-    for trial_idx = 1:(trials_per_session - 1)
-        continuity(cursor) = session_trials(trial_idx).reported_end == session_trials(trial_idx + 1).reported_start;
-        cursor = cursor + 1;
-    end
-end
-end
-
-function [length_accuracy, direction_accuracy] = compute_length_direction_accuracy(trials)
-true_length = [trials.is_long];
-true_direction = [trials.is_flex];
-
-reported_length = zeros(1, numel(trials));
-reported_direction = zeros(1, numel(trials));
-
-for i = 1:numel(trials)
-    reported_length(i) = double(abs(trials(i).reported_end - trials(i).reported_start) == 2);
-    reported_direction(i) = double(trials(i).reported_end > trials(i).reported_start);
-end
-
-length_accuracy = mean(reported_length == true_length);
-direction_accuracy = mean(reported_direction == true_direction);
-end
-
-function corrected_p = benjamini_hochberg(raw_p)
-[sorted_p, sort_idx] = sort(raw_p(:));
-n_tests = numel(sorted_p);
-sorted_adjusted = sorted_p .* n_tests ./ (1:n_tests)';
-sorted_adjusted = flipud(cummin(flipud(sorted_adjusted)));
-sorted_adjusted(sorted_adjusted > 1) = 1;
-
-corrected_p = zeros(size(sorted_p));
-corrected_p(sort_idx) = sorted_adjusted;
-corrected_p = reshape(corrected_p, size(raw_p));
 end
 
 function state = answer_marker_to_state(marker_type)

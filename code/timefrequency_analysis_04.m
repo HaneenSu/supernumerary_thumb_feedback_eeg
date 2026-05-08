@@ -1,4 +1,4 @@
-% SF_TF_longshort.m
+% timefrequency_analysis_04.m
 %
 % Time-frequency (TF) analysis for the sensory feedback study.
 % Part 1: Morlet wavelet convolution on epoched EEG → saves [nSub x nFrex x nTimes x nCh] .mat per group.
@@ -220,7 +220,7 @@ end
 
 
 %% Part 4 — Figure 4: alpha & beta topoplots, PF vs VF
-% Two figures: active window (0–750ms) and late window (750–2000ms)
+% Two figures: active window (0–750ms) and late window (2000-3000ms)
 % Each: 2×2 grid — rows = alpha/beta, columns = PF/VF
 load EEG_chlocs.mat
 close all;
