@@ -2,7 +2,9 @@
 
 Code repository for the EEG study accompanying the paper:
 
-> **Sensory Feedback Shapes Neural Representations of a Supernumerary Thumb**
+> **Pressure Feedback Enhances Supernumerary Robotic Thumb
+Proprioception over Vibrotactile Feedback: Behavioral and EEG
+Evidence**
 
 This repository contains MATLAB scripts for behavioral analysis, EEG preprocessing, time-frequency analysis, and functional connectivity analysis comparing two sensory feedback modalities during supernumerary thumb use.
 
@@ -21,7 +23,7 @@ EEG was recorded while participants performed explicit and implicit thumb articu
 ## Repository Structure
 
 ```
-supernumerary_thumb_eeg/
+supernumerary_thumb_feedback_eeg/
 ├── code/                          — Analysis scripts (run in order)
 │   ├── behavioral_analysis_01.m   — Behavioral accuracy (Figures 2, Supp1, Supp2)
 │   ├── eeg_preprocessing_PF_02.m  — EEG preprocessing for PF group
