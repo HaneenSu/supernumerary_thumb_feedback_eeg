@@ -2,9 +2,7 @@
 
 Code repository for the EEG study accompanying the paper:
 
-> **Pressure Feedback Enhances Supernumerary Robotic Thumb
-Proprioception over Vibrotactile Feedback: Behavioral and EEG
-Evidence**
+> **Continuous Sliding Pressure Feedback Enhances Supernumerary Robotic Thumb Proprioception over Discrete Vibrotactile Feedback: Behavioral and EEG Evidence**
 
 This repository contains MATLAB scripts for behavioral analysis, EEG preprocessing, time-frequency analysis, and functional connectivity analysis comparing two sensory feedback modalities during supernumerary thumb use.
 
